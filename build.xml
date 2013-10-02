@@ -1,0 +1,127 @@
+<project name="UTurn" default="compile" basedir=".">
+
+    <property name="src" value="src/main" />
+    <property name="build" value="bin" />
+    <property name="lib" value="lib" />
+    <property name="package" value="package" />
+    <property name="reports" value="reports" />
+    <property name="build.compiler" value="modern" />
+
+    <target name="init">
+        <tstamp />
+        <mkdir dir="${build}" />
+        <mkdir dir="${reports}" />
+        <mkdir dir="${reports}/raw" />
+        <mkdir dir="${reports}/html" />
+    </target>
+
+    <target name="compile" depends="init">
+
+        <javac
+            srcdir="${src}"
+            destdir="${build}"
+            debug="on"
+            deprecation="on"
+            includeantruntime="false"
+            target="1.6"
+            source="1.6"
+            debuglevel="lines,vars,source">
+
+            <compilerarg value="-Xlint:unchecked"/>
+
+            <classpath>
+                <pathelement path="${build}"/>
+                <fileset dir="${lib}">
+                    <include name="**/*.jar"/>
+                </fileset>
+            </classpath>
+
+        </javac>
+
+        <!--<mkdir dir="${build}/net/quenchnetworks/panthera/productsorttool/view/icons" />
+        <copy todir="${build}/net/quenchnetworks/panthera/productsorttool/view/icons">
+            <fileset dir="icons">
+                <include name="*.png"/>
+            </fileset>
+        </copy>-->
+
+    </target>
+
+    <target name="run" depends="init,compile">
+        <java classname="se.c0la.uturn.Main" fork="yes">
+            <classpath>
+                <pathelement path="${build}"/>
+                <fileset dir="${lib}">
+                    <include name="**/*.jar"/>
+                </fileset>
+            </classpath>
+        </java>
+    </target>
+
+    <target name="clean" depends="init">
+        <delete dir="${build}"/>
+        <delete dir="${reports}"/>
+    </target>
+
+    <target name="run-tests" depends="compile">
+
+        <junit printsummary="yes" haltonfailure="no" showoutput="yes" >
+            <classpath>
+                <pathelement path="${instrumented}"/>
+                <pathelement path="${build}"/>
+                <fileset dir="${lib}">
+                    <include name="**/*.jar"/>
+                </fileset>
+            </classpath>
+
+            <batchtest fork="yes" todir="${reports}/raw/">
+                <formatter type="xml"/>
+                <fileset dir="${src}">
+                    <include name="**/*Test*.java"/>
+                </fileset>
+            </batchtest>
+        </junit>
+    </target>
+
+    <target name="test" depends="run-tests">
+        <junitreport todir="${reports}">
+            <fileset dir="${reports}/raw/">
+                <include name="TEST-*.xml"/>
+            </fileset>
+            <report format="frames" todir="${reports}/html/"/>
+        </junitreport>
+    </target>
+
+    <path id="jar.classpath">
+        <pathelement location="${lib}/js.jar" />
+        <pathelement location="${lib}/xercesImpl.jar" />
+        <pathelement location="${lib}/lucene-core-2.4.1.jar" />
+    </path>
+
+    <target name="package" depends="compile">
+
+        <delete dir="${package}" />
+        <mkdir dir="${package}" />
+
+        <copy todir="${package}">
+            <fileset dir="${build}">
+                <include name="**/*.class"/>
+            </fileset>
+        </copy>
+
+        <unzip src="lib/json.jar" dest="${package}" />
+
+        <jar destfile="UTurn.jar"
+            basedir="${package}">
+
+            <manifest>
+                <attribute name="Main-Class" value="se.c0la.uturn.Main" />
+                <attribute name="Class-Path" value="${mf.classpath}" />
+            </manifest>
+
+        </jar>
+
+        <delete dir="${package}" />
+    </target>
+
+</project>
