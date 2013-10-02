@@ -79,11 +79,6 @@ public class Element
             }
             elements.add(new Element(this));
         }
-
-        if (count == 2) {
-            sizes[0] = 240;
-            sizes[1] = 120;
-        }
     }
 
     public int getElementIndex(Element child)
@@ -104,10 +99,47 @@ public class Element
         return elements.size();
     }
 
+    public int getMySize()
+    {
+        int idx = parent.getElementIndex(this);
+        return parent.sizes[idx];
+    }
+
     public double getSizeFraction(Element element)
     {
         int idx = getElementIndex(element);
         return sizes[idx] / (double)TOTAL_SIZE;
+    }
+
+    public boolean setSizeFraction(Element element, boolean fartherEdge, double newSize)
+    {
+        int idx = getElementIndex(element);
+        int otherIdx;
+        if (fartherEdge) {
+            if (idx + 1 >= getChildCount()) {
+                throw new IllegalStateException("Can't size outwards");
+            }
+
+            otherIdx = idx + 1;
+        } else {
+            if (idx - 1 < 0) {
+                throw new IllegalStateException("Can't size outwards");
+            }
+
+            otherIdx = idx - 1;
+        }
+
+        double totalFraction = getSizeFraction(element) + getSizeFraction(otherIdx);
+        if (totalFraction < newSize) {
+            return false;
+        }
+
+        int total = sizes[idx] + sizes[otherIdx];
+        int otherSize = (int)(TOTAL_SIZE*(totalFraction - newSize));
+        sizes[idx] = total - otherSize;
+        sizes[otherIdx] = otherSize;
+
+        return true;
     }
 
     public double getSizeFraction(int idx)
