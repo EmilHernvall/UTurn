@@ -22,12 +22,12 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionListener;
 import java.awt.image.BufferedImage;
 import javax.activation.DataHandler;
-import javax.swing.JSpinner;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.DefaultListModel;
 import javax.swing.DropMode;
 import javax.swing.JButton;
+import javax.swing.JColorChooser;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JDialog;
@@ -42,6 +42,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSlider;
+import javax.swing.JSpinner;
 import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextArea;
@@ -49,12 +50,12 @@ import javax.swing.JTextField;
 import javax.swing.JTree;
 import javax.swing.JWindow;
 import javax.swing.ListSelectionModel;
+import javax.swing.SpinnerNumberModel;
 import javax.swing.TransferHandler;
 import javax.swing.border.Border;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import static javax.swing.BorderFactory.*;
 import static javax.swing.TransferHandler.TransferSupport;
-import javax.swing.SpinnerNumberModel;
 
 import com.znaptag.ui.HasAction;
 import com.znaptag.ui.HasValue;
@@ -81,7 +82,8 @@ public class StartView extends JFrame implements StartWindow.View
 {
     private static class SplitDialog extends JDialog
     {
-        private Element.SplitAxis result = null;
+        private StartWindow.ElementTool tool = null;
+        private Element.SplitAxis axis = null;
         private SpinnerNumberModel spinnerModel;
 
         public SplitDialog(java.awt.Window parent)
@@ -89,41 +91,109 @@ public class StartView extends JFrame implements StartWindow.View
             super(parent);
 
             JPanel panel = new JPanel();
-            panel.setLayout(new BoxLayout(panel, BoxLayout.X_AXIS));
+            panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+            panel.setBorder(createEmptyBorder(3,3,3,3));
 
-                spinnerModel = new SpinnerNumberModel(2, 2, 10, 1);
-                JSpinner spinner = new JSpinner(spinnerModel);
-                panel.add(spinner);
+                JPanel optionsPanel = new JPanel();
+                optionsPanel.setLayout(new BoxLayout(optionsPanel, BoxLayout.X_AXIS));
 
-                JButton splitHorizontalButton = new JButton("Split Horizontal");
-                splitHorizontalButton.addActionListener(
-                    new ActionListener() {
-                        public void actionPerformed(ActionEvent e) {
-                            result = Element.SplitAxis.HORIZONTAL;
-                            setVisible(false);
-                        }
-                    });
-                panel.add(splitHorizontalButton);
+                    JButton textButton = new JButton("Text");
+                    textButton.setPreferredSize(new Dimension(100, 30));
+                    textButton.setMaximumSize(new Dimension(100, 30));
+                    textButton.addActionListener(
+                        new ActionListener() {
+                            public void actionPerformed(ActionEvent e) {
+                                tool = StartWindow.ElementTool.TEXT;
+                                setVisible(false);
+                            }
+                        });
+                    optionsPanel.add(textButton);
 
-                JButton splitVerticalButton = new JButton("Split Vertical");
-                splitVerticalButton.addActionListener(
-                    new ActionListener() {
-                        public void actionPerformed(ActionEvent e) {
-                            result = Element.SplitAxis.VERTICAL;
-                            setVisible(false);
-                        }
-                    });
-                panel.add(splitVerticalButton);
+                    optionsPanel.add(Box.createHorizontalStrut(5));
 
-                JButton cancelButton = new JButton("Cancel");
-                cancelButton.addActionListener(
-                    new ActionListener() {
-                        public void actionPerformed(ActionEvent e) {
-                            result = null;
-                            setVisible(false);
-                        }
-                    });
-                panel.add(cancelButton);
+                    JButton colorButton = new JButton("Color");
+                    colorButton.addActionListener(
+                        new ActionListener() {
+                            public void actionPerformed(ActionEvent e) {
+                                tool = StartWindow.ElementTool.COLOR;
+                                setVisible(false);
+                            }
+                        });
+                    colorButton.setPreferredSize(new Dimension(100, 30));
+                    colorButton.setMaximumSize(new Dimension(100, 30));
+                    optionsPanel.add(colorButton);
+
+                    optionsPanel.add(Box.createHorizontalStrut(5));
+
+                    JButton deleteButton = new JButton("Delete");
+                    deleteButton.addActionListener(
+                        new ActionListener() {
+                            public void actionPerformed(ActionEvent e) {
+                                tool = StartWindow.ElementTool.DELETE;
+                                setVisible(false);
+                            }
+                        });
+                    deleteButton.setPreferredSize(new Dimension(100, 30));
+                    deleteButton.setMaximumSize(new Dimension(100, 30));
+                    optionsPanel.add(deleteButton);
+
+                panel.add(optionsPanel);
+
+                panel.add(Box.createVerticalStrut(5));
+
+                JPanel splitPanel = new JPanel();
+                splitPanel.setLayout(new BoxLayout(splitPanel, BoxLayout.X_AXIS));
+
+                    spinnerModel = new SpinnerNumberModel(2, 2, 10, 1);
+                    JSpinner spinner = new JSpinner(spinnerModel);
+                    splitPanel.add(spinner);
+
+                    splitPanel.add(Box.createHorizontalStrut(5));
+
+                    JButton splitHorizontalButton = new JButton("Split Horizontal");
+                    splitHorizontalButton.addActionListener(
+                        new ActionListener() {
+                            public void actionPerformed(ActionEvent e) {
+                                tool = StartWindow.ElementTool.SPLIT;
+                                axis = Element.SplitAxis.HORIZONTAL;
+                                setVisible(false);
+                            }
+                        });
+                    splitPanel.add(splitHorizontalButton);
+
+                    splitPanel.add(Box.createHorizontalStrut(5));
+
+                    JButton splitVerticalButton = new JButton("Split Vertical");
+                    splitVerticalButton.addActionListener(
+                        new ActionListener() {
+                            public void actionPerformed(ActionEvent e) {
+                                tool = StartWindow.ElementTool.SPLIT;
+                                axis = Element.SplitAxis.VERTICAL;
+                                setVisible(false);
+                            }
+                        });
+                    splitPanel.add(splitVerticalButton);
+
+                panel.add(splitPanel);
+
+                panel.add(Box.createVerticalStrut(5));
+
+                JPanel cancelPanel = new JPanel();
+                cancelPanel.setLayout(new BoxLayout(cancelPanel, BoxLayout.X_AXIS));
+
+                    JButton cancelButton = new JButton("Cancel");
+                    cancelButton.setPreferredSize(new Dimension(310, 30));
+                    cancelButton.setMaximumSize(new Dimension(310, 30));
+                    cancelButton.addActionListener(
+                        new ActionListener() {
+                            public void actionPerformed(ActionEvent e) {
+                                tool = null;
+                                setVisible(false);
+                            }
+                        });
+                    cancelPanel.add(cancelButton);
+
+                panel.add(cancelPanel);
 
             add(panel);
             setDefaultLookAndFeelDecorated(false);
@@ -133,9 +203,14 @@ public class StartView extends JFrame implements StartWindow.View
             pack();
         }
 
-        public StartWindow.SplitResult getResult()
+        public StartWindow.ElementAction getResult()
         {
-            return new StartWindow.SplitResult(result, (Integer)spinnerModel.getValue());
+            StartWindow.ElementAction action = new StartWindow.ElementAction(tool);
+            if (tool == StartWindow.ElementTool.SPLIT) {
+                action.splitCount = (Integer)spinnerModel.getValue();
+                action.splitAxis = axis;
+            }
+            return action;
         }
     }
 
@@ -189,7 +264,7 @@ public class StartView extends JFrame implements StartWindow.View
                                               previewListScroller);
         splitPane.setBorder(createEmptyBorder(5, 5, 5, 5));
         splitPane.setUI(new FlatSplitPaneUI());
-        splitPane.setDividerLocation(1000);
+        splitPane.setDividerLocation(900);
         add(splitPane);
 
         setJMenuBar(createMenuBar());
@@ -281,7 +356,7 @@ public class StartView extends JFrame implements StartWindow.View
     }
 
     @Override
-    public StartWindow.SplitResult showSplitDialog(Point p)
+    public StartWindow.ElementAction showSplitDialog(Point p)
     {
         splitDialog.setLocation(p);
         splitDialog.setVisible(true);
@@ -361,9 +436,28 @@ public class StartView extends JFrame implements StartWindow.View
     }
 
     @Override
+    public String getText()
+    {
+        return JOptionPane.showInputDialog(this, "Enter text:");
+    }
+
+    @Override
+    public Color getColor()
+    {
+        return JColorChooser.showDialog(this, "Background color", Color.WHITE);
+    }
+
+    @Override
     public int getSelectedSpreadIndex()
     {
         return previewList.getSelectedIndex();
+    }
+
+    @Override
+    public void setSelectedSpreadIndex(int spreadIdx)
+    {
+        previewList.setSelectedIndex(spreadIdx);
+        previewList.ensureIndexIsVisible(spreadIdx);
     }
 
     @Override
@@ -386,3 +480,4 @@ public class StartView extends JFrame implements StartWindow.View
         setVisible(true);
     }
 }
+

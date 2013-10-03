@@ -3,6 +3,7 @@ package se.c0la.uturn.model;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.awt.Color;
 
 public class Element
 {
@@ -20,6 +21,7 @@ public class Element
     private int[] sizes = null;
     private SplitAxis axis = null;
     private String content = null;
+    private Color color = null;
 
     public Element(Page page, Element parent)
     {
@@ -27,25 +29,29 @@ public class Element
         this.parent = parent;
     }
 
-    public Element getParent()
+    public String getContent() { return content; }
+    public Color getColor() { return color; }
+
+    public void setContent(String v)
     {
-        return parent;
+        this.content = v;
+
+        PagePlan plan = page.getPagePlan();
+        plan.firePageChanged(page);
     }
 
-    public boolean isRoot()
+    public void setColor(Color v)
     {
-        return parent == null;
+        this.color = v;
+
+        PagePlan plan = page.getPagePlan();
+        plan.firePageChanged(page);
     }
 
-    public boolean isSplit()
-    {
-        return elements != null;
-    }
-
-    public SplitAxis getSplitAxis()
-    {
-        return axis;
-    }
+    public Element getParent() { return parent; }
+    public boolean isRoot() { return parent == null; }
+    public boolean isSplit() { return elements != null; }
+    public SplitAxis getSplitAxis() { return axis; }
 
     public void split(int count)
     {

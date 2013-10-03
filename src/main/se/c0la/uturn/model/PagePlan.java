@@ -105,7 +105,7 @@ public class PagePlan
                 return count;
             }
 
-            if (pg.isSpread()) {
+            if (current.isSpread()) {
                 i += 2;
             } else {
                 i += 1;

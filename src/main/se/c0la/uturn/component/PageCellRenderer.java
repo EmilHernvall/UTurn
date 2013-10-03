@@ -82,9 +82,10 @@ public class PageCellRenderer
     {
         this.elementDepth += 1;
 
-        int color = 0x80 + 0x10 * elementDepth;
-        ctx.setColor(new Color(color, color, color));
-        ctx.fillRect(rect.x+1, rect.y+1, rect.width-2, rect.height-2);
+        if (element.getColor() != null) {
+            ctx.setColor(element.getColor());
+            ctx.fillRect(rect.x, rect.y, rect.width, rect.height);
+        }
 
         ctx.setColor(Color.BLACK);
         ctx.drawRect(rect.x, rect.y, rect.width, rect.height);

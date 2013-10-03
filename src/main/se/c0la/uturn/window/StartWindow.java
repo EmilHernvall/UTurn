@@ -1,5 +1,7 @@
 package se.c0la.uturn.window;
 
+import java.awt.Color;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -20,7 +22,6 @@ import java.util.Properties;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
 import java.util.zip.ZipOutputStream;
-import java.awt.image.BufferedImage;
 import javax.imageio.ImageIO;
 
 import java.awt.Point;
@@ -56,15 +57,23 @@ import se.c0la.uturn.component.EditorListener;
 
 public class StartWindow
 {
-    public static class SplitResult
+    public static enum ElementTool
     {
-        Element.SplitAxis axis;
-        int count;
+        TEXT,
+        COLOR,
+        DELETE,
+        SPLIT;
+    }
 
-        public SplitResult(Element.SplitAxis axis, int count)
+    public static class ElementAction
+    {
+        public ElementTool tool;
+        public Element.SplitAxis splitAxis;
+        public int splitCount;
+
+        public ElementAction(ElementTool tool)
         {
-            this.axis = axis;
-            this.count = count;
+            this.tool = tool;
         }
     }
 
@@ -78,9 +87,12 @@ public class StartWindow
         HasAction getNextPageButton();
         HasListEvents getPreviewList();
 
-        SplitResult showSplitDialog(Point p);
+        ElementAction showSplitDialog(Point p);
         File showSaveProject(File dir);
         File showOpenProject(File dir);
+        String getText();
+        Color getColor();
+        void setSelectedSpreadIndex(int spreadIdx);
         int getSelectedSpreadIndex();
     }
 
@@ -116,6 +128,7 @@ public class StartWindow
         editor.setPageIndex(0);
 
         view.setPreviewListModel(new PagePlanListModel(currentPlan));
+        view.setSelectedSpreadIndex(0);
     }
 
     private void bind()
@@ -131,20 +144,40 @@ public class StartWindow
         editor.addEditorListener(
             new EditorListener() {
                 public void onElementClicked(Element element, Point p) {
-                    System.out.println("Matching element found: " + element);
                     if (element.isSplit()) {
                         return;
                     }
 
-                    SplitResult result = view.showSplitDialog(p);
-                    if (result.axis == null) {
+                    ElementAction result = view.showSplitDialog(p);
+                    if (result.tool == null) {
                         return;
                     }
 
-                    element.split(result.count, result.axis);
-
                     EditorState editor = view.getEditor();
-                    editor.update();
+                    if (result.tool == ElementTool.SPLIT) {
+                        element.split(result.splitCount, result.splitAxis);
+                        editor.update();
+                    }
+                    else if (result.tool == ElementTool.TEXT) {
+                        String text = view.getText();
+                        if (text == null) {
+                            return;
+                        }
+
+                        element.setContent(text);
+                        editor.update();
+                    }
+                    else if (result.tool == ElementTool.COLOR) {
+                        Color color = view.getColor();
+                        if (color == null) {
+                            return;
+                        }
+                        element.setColor(color);
+                        editor.update();
+                    }
+                    else if (result.tool == ElementTool.DELETE) {
+                        System.out.println("delete");
+                    }
                 }
             });
 
@@ -158,9 +191,11 @@ public class StartWindow
                         return;
                     }
 
-                    System.out.println("prev idx: " + prevIdx);
-
                     editor.setPageIndex(prevIdx);
+
+                    Page page = currentPlan.getPage(prevIdx);
+                    int spreadIdx = currentPlan.getSpreadIndex(page);
+                    view.setSelectedSpreadIndex(spreadIdx);
                 }
             });
 
@@ -174,9 +209,11 @@ public class StartWindow
                         return;
                     }
 
-                    System.out.println("next idx: " + nextIdx);
-
                     editor.setPageIndex(nextIdx);
+
+                    Page page = currentPlan.getPage(nextIdx);
+                    int spreadIdx = currentPlan.getSpreadIndex(page);
+                    view.setSelectedSpreadIndex(spreadIdx);
                 }
             });
 
@@ -189,10 +226,8 @@ public class StartWindow
                     }
 
                     int spreadIdx = view.getSelectedSpreadIndex();
-                    System.out.println("spread index:" + spreadIdx);
                     Page page = currentPlan.getSpread(spreadIdx);
                     int pageIdx = currentPlan.getPageIndex(page);
-                    System.out.println("page index:" + pageIdx);
 
                     EditorState editor = view.getEditor();
                     editor.setPageIndex(pageIdx);

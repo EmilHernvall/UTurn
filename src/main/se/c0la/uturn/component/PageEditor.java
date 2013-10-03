@@ -1,22 +1,26 @@
 package se.c0la.uturn.component;
 
+import java.awt.Font;
 import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Graphics2D;
 import java.awt.Graphics;
 import java.awt.Point;
 import java.awt.Rectangle;
+import java.awt.geom.Rectangle2D;
+import java.awt.RenderingHints;
+import java.awt.event.ComponentEvent;
+import java.awt.event.ComponentListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
-import java.awt.event.ComponentListener;
-import java.awt.event.ComponentEvent;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 import javax.swing.JComponent;
+import static java.awt.RenderingHints.*;
 
 import se.c0la.uturn.model.*;
 
@@ -59,6 +63,7 @@ public class PageEditor
 
     // constants
     private final static int MARGIN = 10;
+    private Font font;
 
     // shared state
     private PagePlan plan;
@@ -79,6 +84,8 @@ public class PageEditor
 
     public PageEditor()
     {
+        this.font = new Font(Font.SANS_SERIF, 0, 15);
+
         this.listeners = new ArrayList<EditorListener>();
         this.measure = new ElementMeasure(MARGIN, this);
 
@@ -122,6 +129,13 @@ public class PageEditor
 
         Graphics2D ctx = (Graphics2D)g;
 
+        Map<Key, Object> hints = new HashMap<Key, Object>();
+        hints.put(KEY_TEXT_ANTIALIASING, VALUE_TEXT_ANTIALIAS_ON);
+
+        ctx.setRenderingHints(hints);
+        ctx.setFont(font);
+        ctx.setColor(Color.BLACK);
+
         drawPage(ctx, measure.getFirstPage(), measure.getFirstPageRect());
         if (measure.getSecondPage() != null) {
             drawPage(ctx, measure.getSecondPage(), measure.getSecondPageRect());
@@ -140,12 +154,22 @@ public class PageEditor
     {
         this.elementDepth += 1;
 
-        int color = 0x80 + 0x10 * elementDepth;
-        ctx.setColor(new Color(color, color, color));
-        ctx.fillRect(rect.x+5, rect.y+5, rect.width-10, rect.height-10);
+        if (element.getColor() != null) {
+            ctx.setColor(element.getColor());
+            ctx.fillRect(rect.x, rect.y, rect.width, rect.height);
+        }
 
         ctx.setColor(Color.BLACK);
         ctx.drawRect(rect.x, rect.y, rect.width, rect.height);
+
+        if (element.getContent() != null) {
+            Rectangle2D bounds = font.getStringBounds(element.getContent(),
+                                                      ctx.getFontRenderContext());
+
+            int left = rect.x + (int)(rect.width - bounds.getWidth())/2;
+            int top = rect.y + (int)(rect.height + bounds.getHeight())/2;
+            ctx.drawString(element.getContent(), left, top);
+        }
 
         if (element.isSplit()) {
             List<Element> children = element.children();
