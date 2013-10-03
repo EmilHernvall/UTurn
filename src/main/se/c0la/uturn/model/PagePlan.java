@@ -6,10 +6,17 @@ import java.util.ArrayList;
 public class PagePlan
 {
     private List<Page> pages;
+    private List<PagePlanListener> listeners;
 
     public PagePlan()
     {
         pages = new ArrayList<Page>();
+        listeners = new ArrayList<PagePlanListener>();
+    }
+
+    public void addListener(PagePlanListener listener)
+    {
+        listeners.add(listener);
     }
 
     public PagePlan(int numPages)
@@ -22,13 +29,13 @@ public class PagePlan
 
         for (int i = 0; i < numPages; i++) {
             if (i == 0) {
-                pages.add(new Page(false));
+                pages.add(new Page(this, false));
             }
             else if (i == numPages-1) {
-                pages.add(new Page(false));
+                pages.add(new Page(this, false));
             }
             else {
-                pages.add(new Page());
+                pages.add(new Page(this));
             }
         }
     }
@@ -53,6 +60,62 @@ public class PagePlan
         return pages.indexOf(page);
     }
 
+    public int getSpreadCount()
+    {
+        int count = 0;
+        for (int i = 0; i < pages.size(); ) {
+            Page pg = pages.get(i);
+            if (pg.isSpread()) {
+                i += 2;
+            } else {
+                i += 1;
+            }
+            count += 1;
+        }
+
+        return count;
+    }
+
+    public Page getSpread(int spreadIdx)
+    {
+        int count = 0;
+        for (int i = 0; i < pages.size(); ) {
+            Page pg = pages.get(i);
+            if (count == spreadIdx) {
+                return pg;
+            }
+
+            if (pg.isSpread()) {
+                i += 2;
+            } else {
+                i += 1;
+            }
+            count += 1;
+        }
+
+        return null;
+    }
+
+    public int getSpreadIndex(Page pg)
+    {
+        int count = 0;
+        for (int i = 0; i < pages.size(); ) {
+            Page current = pages.get(i);
+            if (pg == current) {
+                return count;
+            }
+
+            if (pg.isSpread()) {
+                i += 2;
+            } else {
+                i += 1;
+            }
+            count += 1;
+        }
+
+        return -1;
+    }
+
     public Page getPage(int pageIdx)
     {
         if (pageIdx >= pages.size()) {
@@ -70,5 +133,49 @@ public class PagePlan
 
         int pageIdx = getPageIndex(page);
         return pages.get(pageIdx+1);
+    }
+
+    public int getPrevIndex(int currentIdx)
+    {
+        Page currentPage = pages.get(currentIdx);
+        int newIdx = 0;
+        if (currentIdx - 1 >= 0) {
+            Page prev = pages.get(currentIdx-1);
+            if (prev.isSpread()) {
+                if (currentIdx - 2 >= 0) {
+                    return currentIdx - 2;
+                } else {
+                    return -1;
+                }
+            } else {
+                return currentIdx - 1;
+            }
+        } else {
+            return -1;
+        }
+    }
+
+    public int getNextIndex(int currentIdx)
+    {
+        Page currentPage = pages.get(currentIdx);
+        int newIdx = 0;
+        if (currentPage.isSpread()) {
+            newIdx = currentIdx + 2;
+        } else {
+            newIdx = currentIdx + 1;
+        }
+
+        if (newIdx < pages.size()) {
+            return newIdx;
+        }
+
+        return -1;
+    }
+
+    public void firePageChanged(Page page)
+    {
+        for (PagePlanListener listener : listeners) {
+            listener.onPageChange(page);
+        }
     }
 }

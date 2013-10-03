@@ -48,13 +48,10 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.JTree;
 import javax.swing.JWindow;
+import javax.swing.ListSelectionModel;
 import javax.swing.TransferHandler;
 import javax.swing.border.Border;
 import javax.swing.filechooser.FileNameExtensionFilter;
-import javax.swing.tree.DefaultMutableTreeNode;
-import javax.swing.tree.TreeModel;
-import javax.swing.tree.TreeNode;
-import javax.swing.tree.TreePath;
 import static javax.swing.BorderFactory.*;
 import static javax.swing.TransferHandler.TransferSupport;
 import javax.swing.SpinnerNumberModel;
@@ -70,11 +67,12 @@ import com.znaptag.ui.SliderWrapper;
 import com.znaptag.ui.Action;
 import com.znaptag.ui.ActionHandler;
 import com.znaptag.ui.ListWrapper;
-import com.znaptag.ui.HasMouseEvents;
+import com.znaptag.ui.HasListEvents;
 
 import se.c0la.uturn.window.StartWindow;
 import se.c0la.uturn.component.PageEditor;
-import se.c0la.uturn.component.HasEditorEvents;
+import se.c0la.uturn.component.PageCellRenderer;
+import se.c0la.uturn.component.EditorState;
 import se.c0la.uturn.component.EditorListener;
 import se.c0la.uturn.model.*;
 import static se.c0la.uturn.window.StartWindow.Menu;
@@ -150,6 +148,9 @@ public class StartView extends JFrame implements StartWindow.View
     private JMenuItem aboutMenu;
 
     private PageEditor editor;
+    private JButton prevPageButton;
+    private JButton nextPageButton;
+    private JList<Page> previewList;
 
     private SplitDialog splitDialog;
 
@@ -164,7 +165,32 @@ public class StartView extends JFrame implements StartWindow.View
             editor = new PageEditor();
             mainPanel.add(editor);
 
-        add(mainPanel);
+            JPanel stepPanel = new JPanel();
+            stepPanel.setLayout(new BoxLayout(stepPanel, BoxLayout.X_AXIS));
+            stepPanel.setBorder(createEmptyBorder(5,5,5,5));
+
+                prevPageButton = new JButton("Previous");
+                stepPanel.add(prevPageButton);
+
+                stepPanel.add(Box.createHorizontalGlue());
+
+                nextPageButton = new JButton("Next");
+                stepPanel.add(nextPageButton);
+
+            mainPanel.add(stepPanel);
+
+        previewList = new JList<Page>();
+        previewList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        previewList.setCellRenderer(new PageCellRenderer());
+        JScrollPane previewListScroller = new JScrollPane(previewList);
+
+        JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,
+                                              mainPanel,
+                                              previewListScroller);
+        splitPane.setBorder(createEmptyBorder(5, 5, 5, 5));
+        splitPane.setUI(new FlatSplitPaneUI());
+        splitPane.setDividerLocation(1000);
+        add(splitPane);
 
         setJMenuBar(createMenuBar());
 
@@ -225,15 +251,33 @@ public class StartView extends JFrame implements StartWindow.View
     }
 
     @Override
-    public void setPagePlan(PagePlan plan)
+    public void setPreviewListModel(PagePlanListModel model)
     {
-        editor.setPagePlan(plan);
+        previewList.setModel(model);
     }
 
     @Override
-    public HasEditorEvents getEditor()
+    public EditorState getEditor()
     {
         return editor;
+    }
+
+    @Override
+    public HasAction getPrevPageButton()
+    {
+        return new ButtonWrapper(prevPageButton);
+    }
+
+    @Override
+    public HasAction getNextPageButton()
+    {
+        return new ButtonWrapper(nextPageButton);
+    }
+
+    @Override
+    public HasListEvents getPreviewList()
+    {
+        return new ListWrapper(previewList);
     }
 
     @Override
@@ -317,6 +361,12 @@ public class StartView extends JFrame implements StartWindow.View
     }
 
     @Override
+    public int getSelectedSpreadIndex()
+    {
+        return previewList.getSelectedIndex();
+    }
+
+    @Override
     public void showMessageBox(String message)
     {
         JOptionPane.showMessageDialog(this, message);
@@ -331,7 +381,7 @@ public class StartView extends JFrame implements StartWindow.View
     @Override
     public void display()
     {
-        setSize(new Dimension(1400, 1000));
+        setSize(new Dimension(1200, 600));
         setLocationRelativeTo(null);
         setVisible(true);
     }

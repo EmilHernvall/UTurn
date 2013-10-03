@@ -31,14 +31,12 @@ import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.awt.event.MouseMotionAdapter;
 import java.awt.event.MouseEvent;
-import javax.swing.DefaultListModel;
-import javax.swing.tree.TreeModel;
-import javax.swing.tree.TreeNode;
-import javax.swing.tree.TreePath;
+import javax.swing.event.ListSelectionListener;
+import javax.swing.event.ListSelectionEvent;
 
 import com.znaptag.ui.Action;
 import com.znaptag.ui.HasAction;
-import com.znaptag.ui.HasTreeEvents;
+import com.znaptag.ui.HasListEvents;
 import com.znaptag.ui.HasValue;
 import com.znaptag.ui.HasMouseEvents;
 import com.znaptag.ui.ValueChangeListener;
@@ -53,7 +51,7 @@ import org.json.JSONTokener;
 import org.json.JSONWriter;
 
 import se.c0la.uturn.model.*;
-import se.c0la.uturn.component.HasEditorEvents;
+import se.c0la.uturn.component.EditorState;
 import se.c0la.uturn.component.EditorListener;
 
 public class StartWindow
@@ -73,13 +71,17 @@ public class StartWindow
     public interface View extends WindowView
     {
         void setMenuAction(Action<Menu> action);
+        void setPreviewListModel(PagePlanListModel model);
         void addWindowListener(WindowListener listener);
-        void setPagePlan(PagePlan plan);
-        HasEditorEvents getEditor();
+        EditorState getEditor();
+        HasAction getPrevPageButton();
+        HasAction getNextPageButton();
+        HasListEvents getPreviewList();
 
         SplitResult showSplitDialog(Point p);
         File showSaveProject(File dir);
         File showOpenProject(File dir);
+        int getSelectedSpreadIndex();
     }
 
     public enum Menu
@@ -108,7 +110,12 @@ public class StartWindow
         bind();
 
         currentPlan = new PagePlan(20);
-        view.setPagePlan(currentPlan);
+
+        EditorState editor = view.getEditor();
+        editor.setPagePlan(currentPlan);
+        editor.setPageIndex(0);
+
+        view.setPreviewListModel(new PagePlanListModel(currentPlan));
     }
 
     private void bind()
@@ -120,7 +127,7 @@ public class StartWindow
                 }
             });
 
-        HasEditorEvents editor = view.getEditor();
+        EditorState editor = view.getEditor();
         editor.addEditorListener(
             new EditorListener() {
                 public void onElementClicked(Element element, Point p) {
@@ -136,8 +143,59 @@ public class StartWindow
 
                     element.split(result.count, result.axis);
 
-                    HasEditorEvents editor = view.getEditor();
+                    EditorState editor = view.getEditor();
                     editor.update();
+                }
+            });
+
+        HasAction prevPageButton = view.getPrevPageButton();
+        prevPageButton.addActionListener(
+            new ActionListener() {
+                public void actionPerformed(ActionEvent e) {
+                    EditorState editor = view.getEditor();
+                    int prevIdx = currentPlan.getPrevIndex(editor.getPageIndex());
+                    if (prevIdx == -1) {
+                        return;
+                    }
+
+                    System.out.println("prev idx: " + prevIdx);
+
+                    editor.setPageIndex(prevIdx);
+                }
+            });
+
+        HasAction nextPageButton = view.getNextPageButton();
+        nextPageButton.addActionListener(
+            new ActionListener() {
+                public void actionPerformed(ActionEvent e) {
+                    EditorState editor = view.getEditor();
+                    int nextIdx = currentPlan.getNextIndex(editor.getPageIndex());
+                    if (nextIdx == -1) {
+                        return;
+                    }
+
+                    System.out.println("next idx: " + nextIdx);
+
+                    editor.setPageIndex(nextIdx);
+                }
+            });
+
+        HasListEvents previewList = view.getPreviewList();
+        previewList.addListSelectionListener(
+            new ListSelectionListener() {
+                public void valueChanged(ListSelectionEvent e) {
+                    if (e.getValueIsAdjusting()) {
+                        return;
+                    }
+
+                    int spreadIdx = view.getSelectedSpreadIndex();
+                    System.out.println("spread index:" + spreadIdx);
+                    Page page = currentPlan.getSpread(spreadIdx);
+                    int pageIdx = currentPlan.getPageIndex(page);
+                    System.out.println("page index:" + pageIdx);
+
+                    EditorState editor = view.getEditor();
+                    editor.setPageIndex(pageIdx);
                 }
             });
 
@@ -234,7 +292,7 @@ public class StartWindow
     {
         Properties settings = new Properties();
         try {
-            File settingsFile = new File("znaptool.ini");
+            File settingsFile = new File("uturn.ini");
             if (!settingsFile.exists()) {
                 return;
             }
@@ -254,7 +312,7 @@ public class StartWindow
         settings.put("currentDir", currentDir.getPath());
 
         try {
-            File settingsFile = new File("znaptool.ini");
+            File settingsFile = new File("uturn.ini");
             settings.store(new FileOutputStream(settingsFile), "UTurn settings");
         }
         catch (IOException e) {

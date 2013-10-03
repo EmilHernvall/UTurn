@@ -14,14 +14,16 @@ public class Element
         VERTICAL;
     }
 
+    private Page page = null;
     private Element parent = null;
     private List<Element> elements = null;
     private int[] sizes = null;
     private SplitAxis axis = null;
     private String content = null;
 
-    public Element(Element parent)
+    public Element(Page page, Element parent)
     {
+        this.page = page;
         this.parent = parent;
     }
 
@@ -77,8 +79,11 @@ public class Element
             } else {
                 sizes[i] = TOTAL_SIZE - sum;
             }
-            elements.add(new Element(this));
+            elements.add(new Element(page, this));
         }
+
+        PagePlan plan = page.getPagePlan();
+        plan.firePageChanged(page);
     }
 
     public int getElementIndex(Element child)
@@ -138,6 +143,9 @@ public class Element
         int otherSize = (int)(TOTAL_SIZE*(totalFraction - newSize));
         sizes[idx] = total - otherSize;
         sizes[otherIdx] = otherSize;
+
+        PagePlan plan = page.getPagePlan();
+        plan.firePageChanged(page);
 
         return true;
     }
