@@ -1,0 +1,9 @@
+*.swp
+*.class
+*.ini
+*.log
+tags
+build.sh
+/reports
+/bin
+/UTurn.jar
