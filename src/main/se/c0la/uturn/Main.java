@@ -10,10 +10,6 @@ public class Main
     public static void main(String[] args)
     throws Exception
     {
-        for (UIManager.LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
-            System.out.println(info.getClassName());
-        }
-
         try {
             UIManager.setLookAndFeel("com.sun.java.swing.plaf.gtk.GTKLookAndFeel");
         } catch (Exception e) {

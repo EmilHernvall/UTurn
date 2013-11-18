@@ -30,6 +30,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
+import java.awt.event.MouseAdapter;
 import java.awt.event.MouseMotionAdapter;
 import java.awt.event.MouseEvent;
 import javax.swing.event.ListSelectionListener;
@@ -65,6 +66,23 @@ public class StartWindow
         SPLIT;
     }
 
+    public enum Menu
+    {
+        NEW,
+        OPEN,
+        SAVE,
+        EXPORT,
+        QUIT,
+        DOCUMENTATION,
+        ABOUT;
+    }
+
+    public enum ContextMenu
+    {
+        INSERT_PAGE,
+        DELETE_PAGE;
+    }
+
     public static class ElementAction
     {
         public ElementTool tool;
@@ -80,6 +98,7 @@ public class StartWindow
     public interface View extends WindowView
     {
         void setMenuAction(Action<Menu> action);
+        void setContextMenuAction(Action<ContextMenu> action);
         void setPreviewListModel(PagePlanListModel model);
         void addWindowListener(WindowListener listener);
         EditorState getEditor();
@@ -94,17 +113,7 @@ public class StartWindow
         Color getColor();
         void setSelectedSpreadIndex(int spreadIdx);
         int getSelectedSpreadIndex();
-    }
-
-    public enum Menu
-    {
-        NEW,
-        OPEN,
-        SAVE,
-        EXPORT,
-        QUIT,
-        DOCUMENTATION,
-        ABOUT;
+        void showContextMenu(Point p);
     }
 
     private View view;
@@ -121,7 +130,7 @@ public class StartWindow
 
         bind();
 
-        currentPlan = new PagePlan(20);
+        currentPlan = new PagePlan(1);
 
         EditorState editor = view.getEditor();
         editor.setPagePlan(currentPlan);
@@ -234,6 +243,17 @@ public class StartWindow
                 }
             });
 
+        previewList.addMouseListener(
+            new MouseAdapter() {
+                public void mouseClicked(MouseEvent e) {
+                    if (e.getButton() != MouseEvent.BUTTON3) {
+                        return;
+                    }
+
+                    view.showContextMenu(e.getPoint());
+                }
+            });
+
         view.setMenuAction(
             new Action<Menu>() {
                 public void execute(Menu item) {
@@ -259,6 +279,31 @@ public class StartWindow
                     }
                 }
             });
+
+        view.setContextMenuAction(
+            new Action<ContextMenu>() {
+                public void execute(ContextMenu item) {
+                    switch (item) {
+                        case INSERT_PAGE:
+                            insertPage();
+                            break;
+                        case DELETE_PAGE:
+                            break;
+                    }
+                }
+            });
+    }
+
+    private void insertPage()
+    {
+        int spreadIdx = view.getSelectedSpreadIndex();
+        Page pg = currentPlan.getSpread(spreadIdx);
+        int pageIdx = currentPlan.getPageIndex(pg);
+        if (pg.isSpread()) {
+            currentPlan.insertPages(pageIdx+1, 2, true);
+        } else {
+            currentPlan.insertPages(pageIdx, 2, true);
+        }
     }
 
     private void saveProject()

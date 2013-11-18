@@ -28,6 +28,21 @@ public class PagePlanListModel
     }
 
     @Override
+    public void onPageAdded(PagePlan evtPlan, int pageIdx)
+    {
+        if (evtPlan != plan) {
+            return;
+        }
+
+        fireIntervalAdded(this, pageIdx, pageIdx);
+    }
+
+    @Override
+    public void onPageDeleted(PagePlan plan, int pageIdx)
+    {
+    }
+
+    @Override
     public void onPageChange(Page pg)
     {
         int idx = plan.getSpreadIndex(pg);

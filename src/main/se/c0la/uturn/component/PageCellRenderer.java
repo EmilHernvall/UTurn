@@ -45,7 +45,7 @@ public class PageCellRenderer
         PagePlan plan = page.getPagePlan();
         int pageIdx = plan.getPageIndex(page);
         measure.updateState(plan, pageIdx);
-        repaint(0xCAFEBABE, 0, 0, getWidth(), getHeight());
+        repaint(0xDEADC0DE, 0, 0, getWidth(), getHeight());
 
         return this;
     }

@@ -23,15 +23,11 @@ public class PagePlan
     {
         this();
 
-        if (numPages % 2 != 0) {
-            numPages += 1;
-        }
-
         for (int i = 0; i < numPages; i++) {
             if (i == 0) {
                 pages.add(new Page(this, false));
             }
-            else if (i == numPages-1) {
+            else if (i == numPages-1 && i % 2 == 1) {
                 pages.add(new Page(this, false));
             }
             else {
@@ -170,6 +166,38 @@ public class PagePlan
         }
 
         return -1;
+    }
+
+    public void insertPagesLast(int count, boolean spread)
+    {
+        insertPages(pages.size() - 1, count, spread);
+    }
+
+    public void insertPages(int idx, int count, boolean spread)
+    {
+        List<Page> newPages = new ArrayList<Page>();
+
+        int i = 0;
+        for (Page current : pages) {
+            newPages.add(current);
+            if (i == idx) {
+                for (int j = 0; j < count; j++) {
+                    newPages.add(new Page(this, spread));
+                }
+            }
+            i++;
+        }
+
+        pages = newPages;
+
+        firePageAdded(idx);
+    }
+
+    public void firePageAdded(int pageIdx)
+    {
+        for (PagePlanListener listener : listeners) {
+            listener.onPageAdded(this, pageIdx);
+        }
     }
 
     public void firePageChanged(Page page)

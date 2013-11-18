@@ -40,6 +40,7 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JSlider;
 import javax.swing.JSpinner;
@@ -77,6 +78,7 @@ import se.c0la.uturn.component.EditorState;
 import se.c0la.uturn.component.EditorListener;
 import se.c0la.uturn.model.*;
 import static se.c0la.uturn.window.StartWindow.Menu;
+import static se.c0la.uturn.window.StartWindow.ContextMenu;
 
 public class StartView extends JFrame implements StartWindow.View
 {
@@ -222,6 +224,11 @@ public class StartView extends JFrame implements StartWindow.View
     private JMenuItem documentationMenu;
     private JMenuItem aboutMenu;
 
+    private JPopupMenu contextMenu;
+    private JMenuItem insertMenu;
+    private JMenuItem deleteMenu;
+    private JMenuItem spreadMenu;
+
     private PageEditor editor;
     private JButton prevPageButton;
     private JButton nextPageButton;
@@ -275,6 +282,24 @@ public class StartView extends JFrame implements StartWindow.View
         setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 
         this.splitDialog = new SplitDialog(this);
+
+        this.contextMenu = createContextMenu();
+    }
+
+    private JPopupMenu createContextMenu()
+    {
+        JPopupMenu menu = new JPopupMenu();
+
+            insertMenu = new JMenuItem("Insert page");
+            menu.add(insertMenu);
+
+            deleteMenu = new JMenuItem("Delete page");
+            menu.add(deleteMenu);
+
+            spreadMenu = new JMenuItem("Spread");
+            menu.add(spreadMenu);
+
+        return menu;
     }
 
     private JMenuBar createMenuBar()
@@ -323,6 +348,15 @@ public class StartView extends JFrame implements StartWindow.View
         quitMenu.addActionListener(new ActionHandler<Menu>(action, Menu.QUIT));
         documentationMenu.addActionListener(new ActionHandler<Menu>(action, Menu.DOCUMENTATION));
         aboutMenu.addActionListener(new ActionHandler<Menu>(action, Menu.ABOUT));
+    }
+
+    @Override
+    public void setContextMenuAction(Action<ContextMenu> action)
+    {
+        insertMenu.addActionListener(
+                new ActionHandler<ContextMenu>(action, ContextMenu.INSERT_PAGE));
+        deleteMenu.addActionListener(
+                new ActionHandler<ContextMenu>(action, ContextMenu.DELETE_PAGE));
     }
 
     @Override
@@ -444,7 +478,10 @@ public class StartView extends JFrame implements StartWindow.View
     @Override
     public Color getColor()
     {
-        return JColorChooser.showDialog(this, "Background color", Color.WHITE);
+        ColorPickerDialog dialog = new ColorPickerDialog(this);
+        dialog.setLocationRelativeTo(this);
+        dialog.setVisible(true);
+        return dialog.getColor();
     }
 
     @Override
@@ -458,6 +495,12 @@ public class StartView extends JFrame implements StartWindow.View
     {
         previewList.setSelectedIndex(spreadIdx);
         previewList.ensureIndexIsVisible(spreadIdx);
+    }
+
+    @Override
+    public void showContextMenu(Point p)
+    {
+        contextMenu.show(previewList, (int)p.getX(), (int)p.getY());
     }
 
     @Override
