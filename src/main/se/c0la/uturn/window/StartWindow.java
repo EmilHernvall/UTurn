@@ -308,34 +308,34 @@ public class StartWindow
 
     private void saveProject()
     {
-        /*try {
+        //try {
             File saveFile = view.showSaveProject(currentDir);
             if (saveFile != null) {
-                if (!saveFile.getName().endsWith(".zap")) {
+                if (!saveFile.getName().endsWith(".utp")) {
                     saveFile = new File(saveFile.getParentFile(), saveFile.getName() + ".zap");
                 }
 
-                PrintWriter writer = new PrintWriter(saveFile);
-                writer.println(saveData.toString());
-                writer.close();
+                //PrintWriter writer = new PrintWriter(saveFile);
+                //writer.println(saveData.toString());
+                //writer.close();
             }
-        }
-        catch (IOException e) {
-            e.printStackTrace();
-        }
-        catch (JSONException e) {
-            e.printStackTrace();
-        }*/
+        //}
+        //catch (IOException e) {
+        //    e.printStackTrace();
+        //}
+        //catch (JSONException e) {
+        //    e.printStackTrace();
+        //}
     }
 
     private void loadProject()
     {
-        /*File projectFile = view.showOpenProject(currentDir);
+        File projectFile = view.showOpenProject(currentDir);
         if (projectFile == null) {
             return;
         }
 
-        try {
+        /*try {
             FileInputStream input = new FileInputStream(projectFile);
             JSONTokener tokener = new JSONTokener(new InputStreamReader(input));
             JSONObject data = new JSONObject(tokener);

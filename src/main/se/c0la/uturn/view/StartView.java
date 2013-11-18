@@ -2,13 +2,11 @@ package se.c0la.uturn.view;
 
 import java.util.Enumeration;
 import java.io.File;
-import java.io.FilenameFilter;
 import java.io.IOException;
 
 import java.awt.AWTEvent;
 import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.FileDialog;
 import java.awt.Graphics2D;
 import java.awt.Graphics;
 import java.awt.Point;
@@ -31,7 +29,6 @@ import javax.swing.JColorChooser;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JDialog;
-import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JList;
@@ -54,7 +51,6 @@ import javax.swing.ListSelectionModel;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.TransferHandler;
 import javax.swing.border.Border;
-import javax.swing.filechooser.FileNameExtensionFilter;
 import static javax.swing.BorderFactory.*;
 import static javax.swing.TransferHandler.TransferSupport;
 
@@ -317,7 +313,7 @@ public class StartView extends JFrame implements StartWindow.View
                 saveMenu = new JMenuItem("Save project");
                 fileMenu.add(saveMenu);
 
-                exportMenu = new JMenuItem("Export as .zan");
+                exportMenu = new JMenuItem("Export");
                 fileMenu.add(exportMenu);
 
                 quitMenu = new JMenuItem("Quit UTurn");
@@ -400,73 +396,23 @@ public class StartView extends JFrame implements StartWindow.View
     @Override
     public File showSaveProject(File dir)
     {
-        /*JFileChooser chooser = new JFileChooser();
-        chooser.setCurrentDirectory(dir);
-        FileNameExtensionFilter filter =
-            new FileNameExtensionFilter("UTurn project", "zap");
-        chooser.setFileFilter(filter);
-        int returnVal = chooser.showSaveDialog(this);
-        if (returnVal == JFileChooser.APPROVE_OPTION) {
-            return chooser.getSelectedFile();
-        } else {
-            return null;
-        }*/
+        FilePickerDialog dialog = FilePickerDialog.createSaveDialog(this);
+        dialog.addFileType("UTurn project", "utp");
+        dialog.setCurrentDirectory(dir);
+        dialog.show();
 
-        FileDialog dialog = new FileDialog(this, "Save project");
-        dialog.setMode(FileDialog.SAVE);
-        dialog.setDirectory(dir.getPath());
-        dialog.setFilenameFilter(
-            new FilenameFilter() {
-                public boolean accept(File dir, String name) {
-                    return name.endsWith(".zap");
-                }
-            });
-        dialog.setLocationRelativeTo(this);
-        dialog.setVisible(true);
-
-        String fileName = dialog.getFile();
-        if (fileName == null) {
-            return null;
-        }
-
-        File fileDir = new File(dialog.getDirectory());
-        return new File(fileDir, fileName);
+        return dialog.getSelectedFile();
     }
 
     @Override
     public File showOpenProject(File dir)
     {
-        /*JFileChooser chooser = new JFileChooser();
-        chooser.setCurrentDirectory(dir);
-        FileNameExtensionFilter filter =
-            new FileNameExtensionFilter("UTurn project", "zap");
-        chooser.setFileFilter(filter);
-        int returnVal = chooser.showOpenDialog(this);
-        if (returnVal == JFileChooser.APPROVE_OPTION) {
-            return chooser.getSelectedFile();
-        } else {
-            return null;
-        }*/
+        FilePickerDialog dialog = FilePickerDialog.createOpenDialog(this);
+        dialog.addFileType("UTurn project", "utp");
+        dialog.setCurrentDirectory(dir);
+        dialog.show();
 
-        FileDialog dialog = new FileDialog(this, "Open project");
-        dialog.setMode(FileDialog.LOAD);
-        dialog.setDirectory(dir.getPath());
-        dialog.setFilenameFilter(
-            new FilenameFilter() {
-                public boolean accept(File dir, String name) {
-                    return name.endsWith(".zap");
-                }
-            });
-        dialog.setLocationRelativeTo(this);
-        dialog.setVisible(true);
-
-        String fileName = dialog.getFile();
-        if (fileName == null) {
-            return null;
-        }
-
-        File fileDir = new File(dialog.getDirectory());
-        return new File(fileDir, fileName);
+        return dialog.getSelectedFile();
     }
 
     @Override
