@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.awt.Color;
 
+import org.json.*;
+
 public class Element
 {
     public static int TOTAL_SIZE = 360;
@@ -168,5 +170,92 @@ public class Element
         }
 
         return Collections.unmodifiableList(elements);
+    }
+
+    public JSONObject toJson()
+    throws JSONException
+    {
+        JSONObject obj = new JSONObject();
+
+        JSONArray elementsArr = new JSONArray();
+        if (elements != null) {
+            for (Element element : elements) {
+                elementsArr.put(element.toJson());
+            }
+        }
+
+        obj.put("elements", elementsArr);
+
+        JSONArray sizesArr = new JSONArray();
+        if (sizes != null) {
+            for (int size : sizes) {
+                sizesArr.put(size);
+            }
+        }
+
+        obj.put("sizes", sizesArr);
+        obj.put("axis", axis != null ? axis.toString() : null);
+        obj.put("content", content);
+        obj.put("color", colorToHex(color));
+
+        return obj;
+    }
+
+    private static String colorToHex(Color color)
+    {
+        if (color == null) {
+            return "FFFFFF";
+        }
+
+        return String.format("%02X%02X%02X",
+                             color.getRed(),
+                             color.getGreen(),
+                             color.getBlue());
+    }
+
+    public static Element fromJson(JSONObject obj, Page page, Element parent)
+    throws JSONException
+    {
+        Element element = new Element(page, parent);
+
+        if (!obj.isNull("axis")) {
+            String axis = obj.getString("axis");
+            if ("HORIZONTAL".equals(axis)) {
+                element.axis = SplitAxis.HORIZONTAL;
+            } else if ("VERTICAL".equals(axis)) {
+                element.axis = SplitAxis.VERTICAL;
+            } else {
+                throw new RuntimeException();
+            }
+
+            JSONArray elementsArr = obj.getJSONArray("elements");
+            element.elements = new ArrayList<Element>();
+            for (int i = 0; i < elementsArr.length(); i++) {
+                JSONObject elObj = elementsArr.getJSONObject(i);
+                element.elements.add(Element.fromJson(elObj, page, element));
+            }
+
+            JSONArray sizesArr = obj.getJSONArray("sizes");
+            element.sizes = new int[sizesArr.length()];
+            for (int i  = 0; i < sizesArr.length(); i++) {
+                element.sizes[i] = sizesArr.getInt(i);
+            }
+        }
+
+        if (!obj.isNull("content")) {
+            element.content = obj.getString("content");
+        }
+
+        if (!obj.isNull("color")) {
+            String color = obj.getString("color");
+            if (color != null && color.length() == 6) {
+                int r = Integer.parseInt(color.substring(0, 2), 16);
+                int g = Integer.parseInt(color.substring(2, 4), 16);
+                int b = Integer.parseInt(color.substring(4, 6), 16);
+                element.color = new Color(r, g, b);
+            }
+        }
+
+        return element;
     }
 }

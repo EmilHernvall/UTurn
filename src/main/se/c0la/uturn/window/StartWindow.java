@@ -131,13 +131,18 @@ public class StartWindow
         bind();
 
         currentPlan = new PagePlan(1);
+        setPagePlan(currentPlan);
+    }
 
+    private void setPagePlan(PagePlan plan)
+    {
         EditorState editor = view.getEditor();
-        editor.setPagePlan(currentPlan);
         editor.setPageIndex(0);
+        editor.setPagePlan(plan);
+        editor.update();
 
-        view.setPreviewListModel(new PagePlanListModel(currentPlan));
         view.setSelectedSpreadIndex(0);
+        view.setPreviewListModel(new PagePlanListModel(plan));
     }
 
     private void bind()
@@ -308,24 +313,27 @@ public class StartWindow
 
     private void saveProject()
     {
-        //try {
+        try {
             File saveFile = view.showSaveProject(currentDir);
             if (saveFile != null) {
                 if (!saveFile.getName().endsWith(".utp")) {
-                    saveFile = new File(saveFile.getParentFile(), saveFile.getName() + ".zap");
+                    saveFile = new File(saveFile.getParentFile(),
+                                        saveFile.getName() + ".utp");
                 }
 
-                //PrintWriter writer = new PrintWriter(saveFile);
-                //writer.println(saveData.toString());
-                //writer.close();
+                JSONObject saveData = currentPlan.toJson();
+
+                PrintWriter writer = new PrintWriter(saveFile);
+                writer.println(saveData.toString());
+                writer.close();
             }
-        //}
-        //catch (IOException e) {
-        //    e.printStackTrace();
-        //}
-        //catch (JSONException e) {
-        //    e.printStackTrace();
-        //}
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+        }
+        catch (JSONException e) {
+            e.printStackTrace();
+        }
     }
 
     private void loadProject()
@@ -335,31 +343,20 @@ public class StartWindow
             return;
         }
 
-        /*try {
+        try {
             FileInputStream input = new FileInputStream(projectFile);
             JSONTokener tokener = new JSONTokener(new InputStreamReader(input));
             JSONObject data = new JSONObject(tokener);
 
-            Map<String, Element> lookup = new HashMap<String, Element>();
-            JSONArray elements = data.getJSONArray("elements");
-            for (int i = 0; i < elements.length(); i++) {
-                String fileName = elements.getString(i);
-                File file = new File(fileName);
-                try {
-                    Element element = new Element(file);
-                    elementsListModel.addElement(element);
-                    lookup.put(fileName, element);
-                } catch (IOException ex) {
-                    ex.printStackTrace();
-                }
-            }
+            currentPlan = PagePlan.fromJson(data);
+            setPagePlan(currentPlan);
         }
         catch (JSONException e) {
             e.printStackTrace();
         }
         catch (IOException e) {
             e.printStackTrace();
-        }*/
+        }
     }
 
     private void quit()

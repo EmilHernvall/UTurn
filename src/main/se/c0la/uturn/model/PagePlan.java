@@ -3,6 +3,8 @@ package se.c0la.uturn.model;
 import java.util.List;
 import java.util.ArrayList;
 
+import org.json.*;
+
 public class PagePlan
 {
     private List<Page> pages;
@@ -12,11 +14,6 @@ public class PagePlan
     {
         pages = new ArrayList<Page>();
         listeners = new ArrayList<PagePlanListener>();
-    }
-
-    public void addListener(PagePlanListener listener)
-    {
-        listeners.add(listener);
     }
 
     public PagePlan(int numPages)
@@ -34,6 +31,11 @@ public class PagePlan
                 pages.add(new Page(this));
             }
         }
+    }
+
+    public void addListener(PagePlanListener listener)
+    {
+        listeners.add(listener);
     }
 
     public float getPageWidth()
@@ -205,5 +207,30 @@ public class PagePlan
         for (PagePlanListener listener : listeners) {
             listener.onPageChange(page);
         }
+    }
+
+    public JSONObject toJson()
+    throws JSONException
+    {
+        JSONObject obj = new JSONObject();
+        JSONArray pagesArr = new JSONArray();
+        for (Page page : pages) {
+            pagesArr.put(page.toJson());
+        }
+        obj.put("pages", pagesArr);
+        return obj;
+    }
+
+    public static PagePlan fromJson(JSONObject obj)
+    throws JSONException
+    {
+        PagePlan plan = new PagePlan();
+
+        JSONArray pagesArr = obj.getJSONArray("pages");
+        for (int i = 0; i < pagesArr.length(); i++) {
+            plan.pages.add(Page.fromJson(pagesArr.getJSONObject(i), plan));
+        }
+
+        return plan;
     }
 }

@@ -91,7 +91,7 @@ public abstract class FilePickerDialog
             dialog.setFilenameFilter(
                 new FilenameFilter() {
                     public boolean accept(File dir, String name) {
-                        return name.endsWith(".zap");
+                        return name.endsWith(ext);
                     }
                 });
         }
